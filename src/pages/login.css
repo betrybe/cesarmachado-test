@@ -1,13 +1,14 @@
+
 .login-container{
   border-radius: 10%;
-  border: 1px solid white;
+  border: 1px solid black;
   display: flex;
   flex-direction: column;
   margin: 100px auto;
   padding: 40px;
   text-align: center;
   width: 260px;
-  
+  background: #191919;
 }
 
 
