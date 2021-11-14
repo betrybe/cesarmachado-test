@@ -1,0 +1,72 @@
+form {
+  background: #3a3a3a;
+  
+  display: flex;
+  padding: 20px 0;
+  justify-content: space-around;
+  color: #fff;
+  /* height: 80px; */
+}
+
+form input {
+  text-align: center;
+  border-radius: 10px;
+  height: 30px;
+  width: 30px;
+}
+
+#value {
+  width: 90px;
+  margin-left: 5px;
+}
+#description {
+  width: 120px;
+  margin-left: 5px;
+}
+
+#currency {
+  width: 90px;
+  margin-left: 5px;
+}
+
+#method {
+  /* width: 100px; */
+  margin-left: 5px;
+}
+
+#tag {
+  /* width: 120px; */
+  margin-left: 5px;
+}
+
+label {
+  /* margin-right: 5px; */
+  height: 40px;
+}
+
+form select {
+  text-align: center;
+  border-radius: 10px;
+  height: 30px;
+}
+
+form button {
+  background-color: rgb(26, 67, 153);
+  border: none;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 5px 10px;
+  height: 30px;
+  border-radius: 10px;
+}
+
+form button:hover {
+  cursor: pointer;
+  filter: brightness(0.9);
+}
+
+form button:disabled {
+  filter: brightness(0.5);
+  cursor: not-allowed;
+}

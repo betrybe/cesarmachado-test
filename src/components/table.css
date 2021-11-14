@@ -1,0 +1,33 @@
+.table-container{
+  /* border-spacing: 10px; */
+  text-align: center;
+  
+}
+
+th, tbody {
+  width: 5%;
+  text-align: center;
+}
+
+
+button {
+  margin-left: 10px;
+}
+
+.edit-btn {
+  background-color: rgb(250, 227, 97);
+  margin-right: 5px;
+  border-radius: 5px;
+  
+}
+
+.delete-btn {
+  background-color: rgb(226, 10, 10);
+  border-radius: 5px;
+  color: #fff;
+}
+
+button:hover {
+  filter: brightness(0.8);
+  cursor: pointer;
+}
