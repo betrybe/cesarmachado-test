@@ -1,0 +1,74 @@
+form {
+  background: #3a3a3a;
+  
+  display: flex;
+  align-items: center;
+  padding: 20px 0;
+  justify-content: space-around;
+  color: #fff;
+  height: 60px;
+}
+
+form input {
+  /* text-align: center; */
+  border-radius: 10px;
+  height: 30px;
+  width: 30px;
+}
+
+#Valor {
+  width: 90px;
+  margin-left: 5px;
+}
+#descricao-despesa {
+  width: 120px;
+  margin-left: 5px;
+}
+
+#currency {
+  width: 90px;
+  margin-left: 5px;
+}
+
+#method {
+  /* width: 100px; */
+  margin-left: 10px;
+}
+
+#moeda {
+  /* width: 100px; */
+  margin-left: 10px;
+}
+
+#tag {
+  /* width: 120px; */
+  margin-left: 5px;
+}
+
+form select {
+  text-align: center;
+  border-radius: 10px;
+  height: 30px;
+  margin-left: 5px;
+}
+
+form button {
+  background-color: rgb(26, 67, 153);
+  border: none;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 5px 10px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+form button:hover {
+  cursor: pointer;
+  filter: brightness(0.9);
+}
+
+form button:disabled {
+  filter: brightness(0.5);
+  cursor: not-allowed;
+}

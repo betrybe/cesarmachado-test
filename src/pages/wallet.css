@@ -1,0 +1,28 @@
+.header-container {
+  background-color: rgb(232, 235, 235);
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+}
+
+.user {
+  display: flex;
+  align-items: center;
+}
+
+.span-user {
+  margin-left: 5px;
+  margin-right: 20px;
+}
+
+.span-currency {
+  margin-left: 15px;
+  /* margin-right: 20px; */
+}
+
+
+
+
+
