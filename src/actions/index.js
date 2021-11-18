@@ -1,57 +1,53 @@
 // Coloque aqui suas actions
+import fetchAPI from '../services/API';
 
 export const EMAIL_STORE = 'EMAIL_STORE';
-export const ADD_EXPENSE = 'ADD_EXPENSE';
-export const CONFIRM_EDIT = 'CONFIRM_EDIT';
-export const DELETE_EXPENSE = 'DELETE_EXPENSE';
-export const EDIT_EXPENSE = 'EDIT_EXPENSE';
-export const START_REQUEST = 'START_REQUEST';
-export const GET_CURRENCIES = 'GET_CURRENCIES';
-export const FAILED_REQUEST = 'FAILED_REQUEST';
 
 export const storeEmail = (email) => ({
   type: EMAIL_STORE,
   email,
 });
 
-export const addExpense = (payload) => ({
-  type: ADD_EXPENSE,
-  payload,
+export const WALLET_CHANGE = 'WALLET_CHANGE';
+export const walletChange = () => ({ type: WALLET_CHANGE });
+
+export const EXPENSE_SUBMIT = 'EXPENSE_SUBMIT';
+export const expenseSubmit = (expense) => ({
+  type: EXPENSE_SUBMIT,
+  expense,
 });
 
-export const deleteExpense = (payload) => ({
+export const CURRENT_EXCHANGE = 'CURRENT_EXCHANGE';
+export const getCurrentExchange = (exchange) => ({
+  type: CURRENT_EXCHANGE,
+  exchange,
+});
+
+export const DELETE_EXPENSE = 'DELETE_EXPENSE';
+export const deleteExpense = (id) => ({
   type: DELETE_EXPENSE,
-  payload,
+  id,
 });
 
-export const editExpense = (payload) => ({
+export const EDIT_EXPENSE = 'EDIT_EXPENSE';
+export const editExpense = (expense) => ({
   type: EDIT_EXPENSE,
-  payload,
+  expense,
 });
 
-export const startRequest = () => ({
-  type: START_REQUEST,
-  payload: {
-    isFetching: true,
-  },
+export const CONFIRM_EDIT = 'CONFIRM_EDIT';
+export const confirmEdit = (id, expense) => ({
+  type: CONFIRM_EDIT,
+  id,
+  expense,
 });
 
-export const getCurrencies = (currencies) => ({
-  type: GET_CURRENCIES,
-  payload: {
-    currencies,
-    isFetching: false,
-  },
-});
-
-export function fetchCurrencies() {
-  return async (dispatch) => {
-    dispatch(startRequest());
-
-    const apiResponse = await fetch('https://economia.awesomeapi.com.br/json/all');
-    const apiJson = await apiResponse.json();
-    const currencies = Object.keys(apiJson).filter((currency) => currency !== 'USDT');
-
-    dispatch(getCurrencies(currencies));
-  };
-}
+export const thunker = () => async (dispatch) => {
+  try {
+    const coins = await fetchAPI();
+    dispatch(getCurrentExchange(coins));
+    return coins;
+  } catch (error) {
+    console.log(error);
+  }
+};

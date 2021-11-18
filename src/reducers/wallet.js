@@ -1,44 +1,48 @@
 // Esse reducer será responsável por tratar o todas as informações relacionadas as despesas
 import {
-  ADD_EXPENSE,
-  CONFIRM_EDIT,
+  EXPENSE_SUBMIT,
+  CURRENT_EXCHANGE,
   DELETE_EXPENSE,
   EDIT_EXPENSE,
-  GET_CURRENCIES,
-  START_REQUEST,
-} from '../actions';
+  CONFIRM_EDIT }
+  from '../actions/index';
 
 const INITIAL_STATE = {
   currencies: [],
   expenses: [],
-  editTarget: {},
-  isFetching: true,
+  currentCurrency: 'BRL',
+  editMode: false,
+  editIndex: NaN,
+  editExpense: {},
 };
 
-const wallet = (state = INITIAL_STATE, { type, payload }) => {
-  switch (type) {
-  case START_REQUEST:
-    return { ...state, isFetching: payload.isFetching };
-  case GET_CURRENCIES:
-    return { ...state, currencies: payload.currencies, isFetching: payload.isFetching };
-  case ADD_EXPENSE:
-    return { ...state,
-      expenses: [...state.expenses, payload].sort((a, b) => a.id - b.id),
-    };
-  case EDIT_EXPENSE:
-    return { ...state,
-      editTarget: state.expenses.find((expense) => expense.id === payload),
-    };
-  case CONFIRM_EDIT:
-    return { ...state, editTarget: { ...state.editTarget, ...payload } };
+function wallet(state = INITIAL_STATE, action) {
+  switch (action.type) {
+  case EXPENSE_SUBMIT:
+    return { ...state, expenses: [...state.expenses, action.expense] };
+  case CURRENT_EXCHANGE:
+    return { ...state, currencies: action.exchange };
   case DELETE_EXPENSE:
     return { ...state,
-      expenses: state.expenses.filter((expense) => expense.id !== payload),
-      editTarget: {},
-    };
+      expenses: state.expenses.filter((expense) => expense.id !== action.id) };
+  case EDIT_EXPENSE:
+    return {
+      ...state,
+      editMode: true,
+      editIndex: action.expense.id,
+      editExpense: action.expense };
+  case CONFIRM_EDIT:
+    return {
+      ...state,
+      editMode: false,
+      expenses: state.expenses.map((expense) => {
+        if (expense.id === action.id) {
+          return action.expense;
+        } return expense;
+      }) };
   default:
     return state;
   }
-};
+}
 
 export default wallet;
