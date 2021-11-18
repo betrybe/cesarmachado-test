@@ -2,24 +2,25 @@ form {
   background: #3a3a3a;
   
   display: flex;
+  align-items: center;
   padding: 20px 0;
   justify-content: space-around;
   color: #fff;
-  /* height: 80px; */
+  height: 60px;
 }
 
 form input {
-  text-align: center;
+  /* text-align: center; */
   border-radius: 10px;
   height: 30px;
   width: 30px;
 }
 
-#value {
+#Valor {
   width: 90px;
   margin-left: 5px;
 }
-#description {
+#descricao-despesa {
   width: 120px;
   margin-left: 5px;
 }
@@ -31,7 +32,12 @@ form input {
 
 #method {
   /* width: 100px; */
-  margin-left: 5px;
+  margin-left: 10px;
+}
+
+#moeda {
+  /* width: 100px; */
+  margin-left: 10px;
 }
 
 #tag {
@@ -39,15 +45,11 @@ form input {
   margin-left: 5px;
 }
 
-label {
-  /* margin-right: 5px; */
-  height: 40px;
-}
-
 form select {
   text-align: center;
   border-radius: 10px;
   height: 30px;
+  margin-left: 5px;
 }
 
 form button {
@@ -57,7 +59,7 @@ form button {
   font-size: 15px;
   font-weight: 600;
   padding: 5px 10px;
-  height: 30px;
+  height: 40px;
   border-radius: 10px;
 }
 

@@ -1,170 +1,249 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import fetchAPI from '../services/API';
+import { expenseSubmit, thunker, confirmEdit } from '../actions/index';
 import './form.css';
 
-import {
-  addExpense as addExpenseAction,
-  deleteExpense as deleteExpenseAction,
-  fetchCurrencies as fetchCurrenciesAction,
-} from '../actions';
-
-class ExpensesForm extends React.Component {
+class FormExpenses extends React.Component {
   constructor() {
     super();
-
-    this.initialState = {
-      value: 0,
-      description: '',
-      currency: 'USD',
-      method: 'Dinheiro',
-      tag: 'Lazer',
-      exchangeRates: {},
+    this.state = {
+      isFetched: false,
+      coins: [],
     };
-
-    this.state = { id: 0, ...this.initialState };
-
+    this.doFetch = this.doFetch.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    this.handleAddClick = this.handleAddClick.bind(this);
-    this.handleEditClick = this.handleEditClick.bind(this);
-    this.renderButton = this.renderButton.bind(this);
-    this.renderInput = this.renderInput.bind(this);
-    this.renderSelect = this.renderSelect.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.inputDespesaDescricao = this.inputDespesaDescricao.bind(this);
+    this.renderCurrenciesAndMethod = this.renderCurrenciesAndMethod.bind(this);
+    this.handleEditMode = this.handleEditMode.bind(this);
+    this.resetState = this.resetState.bind(this);
+    this.retrieveEditExpenseState = this.retrieveEditExpenseState.bind(this);
   }
 
   componentDidMount() {
-    const { fetchCurrencies } = this.props;
-    fetchCurrencies();
+    this.doFetch();
   }
 
-  handleChange({ target: { id, value } }) {
-    this.setState({ [id]: value });
+  componentDidUpdate(prevProps) {
+    const { editMode, editExpense } = this.props;
+    if (editMode && prevProps.editExpense !== editExpense) {
+      this.retrieveEditExpenseState();
+    }
   }
 
-  async handleAddClick(event) {
-    event.preventDefault();
-    const { addExpense } = this.props;
-    const apiResponse = await fetch('https://economia.awesomeapi.com.br/json/all');
-    const apiJson = await apiResponse.json();
-    this.setState({ exchangeRates: apiJson }, () => {
-      addExpense(this.state);
-      this.setState((previousState) => ({
-        id: previousState.id + 1,
-        ...this.initialState,
-      }));
-    });
+  retrieveEditExpenseState() {
+    const { editExpense } = this.props;
+    this.setState((oldState) => ({
+      ...oldState,
+      shouldLoop: false,
+      expense: {
+        ...editExpense,
+      },
+    }));
   }
 
-  handleEditClick(event) {
-    event.preventDefault();
-    const { addExpense, editTarget, deleteExpense } = this.props;
-    const { value, description, currency, method, tag } = this.state;
-    deleteExpense(parseInt(editTarget.id, 10));
-    addExpense({
-      id: editTarget.id,
-      value,
-      description,
-      currency,
-      method,
-      tag,
-      exchangeRates: editTarget.exchangeRates,
-    });
+  async doFetch() {
+    const result = await fetchAPI();
+    const arrayResult = Object.values(result);
+    const formattedResult = arrayResult.filter((coin) => coin.codein !== 'BRLT');
+    this.setState((oldState) => ({
+      ...oldState,
+      coins: formattedResult,
+      isFetched: true,
+      shouldLoop: true,
+      expense: {
+        id: 0,
+        value: 0,
+        currency: 'USD',
+        method: 'dinheiro',
+        tag: 'alimentacao',
+        description: '',
+        exchangeRates: '',
+      },
+    }));
   }
 
-  renderInput(name, attribute, state) {
-    return (
-      <label htmlFor={ attribute }>
-        { name }
-        <input
-          data-testid={ `${attribute}-input` }
-          id={ attribute }
-          onChange={ this.handleChange }
-          type="text"
-          value={ state }
-        />
-      </label>
-    );
+  handleChange({ target: { name, value } }) {
+    this.setState((oldState) => ({
+      ...oldState,
+      expense: { ...oldState.expense,
+        [name]: value,
+      },
+    }));
   }
 
-  renderSelect(name, attribute, state, options) {
-    return (
-      <label htmlFor={ attribute }>
-        { name }
-        <select
-          data-testid={ `${attribute}-input` }
-          id={ attribute }
-          name={ attribute }
-          onChange={ this.handleChange }
-          value={ state }
+  resetState(editId) {
+    const { expense } = this.state;
+    this.setState((oldState) => ({
+      ...oldState,
+      expense: {
+        ...oldState.expense,
+        id: (editId ? expense.id + editId : expense.id + 1),
+      },
+    }));
+  }
+
+  async handleSubmit() {
+    const { expenseSubmitAction, thunkerAction } = this.props;
+    const { expense } = this.state;
+    const coins = await thunkerAction();
+    expenseSubmitAction({ ...expense, exchangeRates: coins });
+    this.resetState();
+  }
+
+  async handleConfirmEdit() {
+    const { confirmEditAction, editExpense } = this.props;
+    const { expense } = this.state;
+    const propExchangeRate = editExpense.exchangeRates;
+    confirmEditAction(editExpense.id,
+      { ...expense, exchangeRates: propExchangeRate });
+    this.resetState();
+  }
+
+  handleEditMode() {
+    const { editMode } = this.props;
+    if (editMode) {
+      return (
+        <button
+          onClick={ () => this.handleConfirmEdit() }
+          type="button"
         >
-          { options.map((option) => (
-            <option data-testid={ option } key={ option } value={ option }>
-              { option }
-            </option>
-          ))}
-        </select>
-      </label>
+          Editar Despesa
+        </button>
+      );
+    }
+    return (
+      <button onClick={ this.handleSubmit } type="button">Adicionar despesa</button>
     );
   }
 
-  renderButton() {
-    const { editTarget } = this.props;
+  inputDespesaDescricao(state) {
+    const { expense } = state;
     return (
-      <button
-        onClick={ Object.keys(editTarget).length === 0
-          ? this.handleAddClick : this.handleEditClick }
-        type="submit"
-      >
-        { Object.keys(editTarget).length === 0
-          ? 'Adicionar despesa' : 'Editar despesa' }
+      <>
+        <label htmlFor="Valor">
+          Valor
+          <input
+            data-testid="value-input"
+            id="Valor"
+            type="number"
+            name="value"
+            value={ expense.value }
+            onChange={ this.handleChange }
+          />
+        </label>
+        <label htmlFor="descricao-despesa">
+          Descrição da despesa:
+          <input
+            data-testid="description-input"
+            id="descricao-despesa"
+            name="description"
+            value={ expense.description }
+            onChange={ this.handleChange }
+          />
+        </label>
+      </>
+    );
+  }
 
-      </button>
+  renderCurrenciesAndMethod() {
+    const { coins, expense: { currency, method } } = this.state;
+    return (
+      <>
+        <label htmlFor="moeda">
+          Moeda
+          <select
+            data-testid="currency-input"
+            id="moeda"
+            name="currency"
+            onChange={ this.handleChange }
+            value={ currency }
+          >
+            {coins.map((coin, index) => (
+              <option value={ coin.code } data-testid={ coin.code } key={ index }>
+                {coin.code}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label htmlFor="Método de pagamento">
+          Método de pagamento:
+          <select
+            data-testid="method-input"
+            name="method"
+            value={ method }
+            id="Método de pagamento"
+            onChange={ this.handleChange }
+            className="method"
+          >
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão de crédito">Cartão de crédito</option>
+            <option value="Cartão de débito">Cartão de débito</option>
+          </select>
+        </label>
+      </>
     );
   }
 
   render() {
-    const { loading, currencies } = this.props;
-    const { value, description, currency, method, tag } = this.state;
-    const paymentMethods = ['Dinheiro', 'Cartão de crédito', 'Cartão de débito'];
-    const expenseTags = ['Alimentação', 'Lazer', 'Trabalho', 'Transporte', 'Saúde'];
-
+    const { isFetched } = this.state;
+    if (!isFetched) { return <div>Carregando...</div>; }
+    const { expense: { tag } } = this.state;
     return (
       <form>
-        { this.renderInput('Valor:', 'value', value) }
-        { this.renderInput('Descrição:', 'description', description) }
-        { !loading && this.renderSelect('Moeda:', 'currency', currency, currencies) }
-        { this.renderSelect('Método de pagamento:', 'method', method, paymentMethods) }
-        { this.renderSelect('Categoria da Despesa:', 'tag', tag, expenseTags) }
-        { this.renderButton() }
+        { this.inputDespesaDescricao(this.state) }
+        { this.renderCurrenciesAndMethod(this.state) }
+        <label htmlFor="tag">
+          Tag:
+          <select
+            data-testid="tag-input"
+            value={ tag }
+            name="tag"
+            id="tag"
+            onChange={ this.handleChange }
+          >
+            <option value="Alimentação">Alimentação</option>
+            <option value="Lazer">Lazer</option>
+            <option value="Trabalho">Trabalho</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Saúde">Saúde</option>
+          </select>
+        </label>
+        { this.handleEditMode() }
       </form>
     );
   }
 }
 
-const mapStateToProps = (state) => ({
-  loading: state.wallet.isFetching,
-  currencies: state.wallet.currencies,
-  editTarget: state.wallet.editTarget,
-});
-
 const mapDispatchToProps = (dispatch) => ({
-  addExpense: (payload) => dispatch(addExpenseAction(payload)),
-  deleteExpense: (payload) => dispatch(deleteExpenseAction(payload)),
-  fetchCurrencies: () => dispatch(fetchCurrenciesAction()),
+  expenseSubmitAction: (state) => dispatch(expenseSubmit(state)),
+  thunkerAction: () => dispatch(thunker()),
+  confirmEditAction: (id, expense) => dispatch(confirmEdit(id, expense)),
+});
+const mapStateToProps = (state) => ({
+  expensesList: state.wallet.expenses,
+  editMode: state.wallet.editMode,
+  editExpense: state.wallet.editExpense,
+  storeCurrencies: state.wallet.currencies,
 });
 
-ExpensesForm.propTypes = {
-  loading: PropTypes.bool,
-  currencies: PropTypes.arrayOf(PropTypes.string).isRequired,
-  editTarget: PropTypes.objectOf(PropTypes.any),
-  addExpense: PropTypes.func.isRequired,
-  deleteExpense: PropTypes.func.isRequired,
-  fetchCurrencies: PropTypes.func.isRequired,
+export default connect(mapStateToProps, mapDispatchToProps)(FormExpenses);
+
+FormExpenses.propTypes = {
+  expenseSubmitAction: PropTypes.func.isRequired,
+  thunkerAction: PropTypes.func.isRequired,
+  confirmEditAction: PropTypes.func.isRequired,
+  editMode: PropTypes.bool,
+  editExpense: PropTypes.shape({
+    id: PropTypes.number,
+    exchangeRates: PropTypes.shape({
+    }),
+  }),
 };
 
-ExpensesForm.defaultProps = {
-  loading: undefined,
-  editTarget: {},
+FormExpenses.defaultProps = {
+  editMode: null,
+  editExpense: null,
 };
-
-export default connect(mapStateToProps, mapDispatchToProps)(ExpensesForm);

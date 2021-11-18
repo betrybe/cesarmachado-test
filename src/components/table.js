@@ -1,109 +1,145 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { deleteExpense, editExpense, getCurrentExchange } from '../actions/index';
 import './table.css';
 
-import {
-  deleteExpense as deleteExpenseAction,
-  editExpense as editExpenseAction,
-} from '../actions';
-
 class Table extends React.Component {
-  constructor() {
-    super();
-
-    this.getTableData = this.getTableData.bind(this);
-    this.renderDeleteButton = this.renderDeleteButton.bind(this);
-    this.renderEditButton = this.renderEditButton.bind(this);
+  constructor(props) {
+    super(props);
+    this.editButtonShouldExist = this.editButtonShouldExist.bind(this);
+    this.renderExpensesTable = this.renderExpensesTable.bind(this);
+    this.handleDeleteExpense = this.handleDeleteExpense.bind(this);
+    this.handleEditExpense = this.handleEditExpense.bind(this);
+    this.deleteButtonShouldExist = this.deleteButtonShouldExist.bind(this);
   }
 
-  getTableData() {
-    const { expenses } = this.props;
-    return expenses.length > 0 && expenses.map(
-      ({ id, description, tag, method, value, exchangeRates, currency }) => (
-        <tr key={ id }>
-          <td>{ description }</td>
-          <td>{ tag }</td>
-          <td>{ method }</td>
-          <td>{ value }</td>
-          <td>{ exchangeRates[currency].name }</td>
-          <td>{ parseFloat(exchangeRates[currency].ask).toFixed(2) }</td>
-          <td>{ (value * exchangeRates[currency].ask).toFixed(2) }</td>
+  handleDeleteExpense(id) {
+    const { deleteExpenseAction } = this.props;
+    deleteExpenseAction(id);
+  }
+
+  handleEditExpense(expense) {
+    const { editExpenseAction, getCurrentExchangeAction } = this.props;
+    editExpenseAction(expense);
+    getCurrentExchangeAction(expense.exchangeRates);
+  }
+
+  deleteButtonShouldExist(expense) {
+    const { editMode } = this.props;
+    if (!editMode) {
+      return (
+        <button
+          type="button"
+          onClick={ () => this.handleDeleteExpense(expense.id) }
+          data-testid="delete-btn"
+          className="delete-btn"
+        >
+          {' '}
+          Deletar
+          {' '}
+        </button>);
+    }
+  }
+
+  editButtonShouldExist(expense) {
+    const { editMode } = this.props;
+    if (!editMode) {
+      return (
+        <button
+          type="button"
+          data-testid="edit-btn"
+          onClick={ () => this.handleEditExpense(expense) }
+          className="edit-btn"
+        >
+          Edit
+        </button>);
+    }
+  }
+
+  renderExpensesTable() {
+    const { getWalletState } = this.props;
+    return getWalletState.map((expense) => {
+      let getCurrency = expense.exchangeRates[expense.currency];
+      const getAsk = expense.exchangeRates[expense.currency];
+      let ask = '';
+      let value = Number.parseFloat(expense.value);
+      let rawAsk = '';
+      ask = getAsk.ask * 100;
+      rawAsk = getAsk.ask;
+      ask = (Math.round(ask) / 100).toFixed(2);
+      value *= Number.parseFloat(rawAsk);
+      value = (Math.round(value * 100) / 100);
+      getCurrency = [getCurrency.name.split('/')[0]]; // array destructuring
+      return (
+        <tr key={ expense.id }>
+          <td>{expense.description}</td>
+          <td>{expense.tag}</td>
+          <td>{expense.method}</td>
+          <td>{expense.value}</td>
+          <td>{getCurrency}</td>
+          <td>{ask}</td>
+          <td>{value}</td>
           <td>Real</td>
-          <td id={ id }>
-            { this.renderEditButton() }
-            { this.renderDeleteButton() }
+          <td>
+            { this.deleteButtonShouldExist(expense) }
+            { this.editButtonShouldExist(expense)}
           </td>
         </tr>
-      ),
-    );
-  }
-
-  renderDeleteButton() {
-    const { deleteExpense } = this.props;
-    return (
-      <button
-        data-testid="delete-btn"
-        onClick={ (e) => { deleteExpense(parseInt(e.target.parentElement.id, 10)); } }
-        type="button"
-        className="delete-btn"
-      >
-        Deletar
-      </button>);
-  }
-
-  renderEditButton() {
-    const { editExpense } = this.props;
-    return (
-      <button
-        className="edit-btn"
-        data-testid="edit-btn"
-        onClick={ (e) => { editExpense(parseInt(e.target.parentElement.id, 10)); } }
-        type="button"
-      >
-        Editar
-      </button>);
+      );
+    });
   }
 
   render() {
     return (
-      <section>
-        <table>
-          <thead>
-            <tr>
-              <th>Descrição</th>
-              <th>Tag</th>
-              <th>Método de pagamento</th>
-              <th>Valor</th>
-              <th>Moeda</th>
-              <th>Câmbio utilizado</th>
-              <th>Valor convertido</th>
-              <th>Moeda de conversão</th>
-              <th>Editar/Excluir</th>
-            </tr>
-          </thead>
-          <tbody>
-            { this.getTableData() }
-          </tbody>
-        </table>
-      </section>
+      <table>
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th>Tag</th>
+            <th>Método de pagamento</th>
+            <th>Valor</th>
+            <th>Moeda</th>
+            <th>Câmbio utilizado</th>
+            <th>Valor convertido</th>
+            <th>Moeda de conversão</th>
+            <th>Editar/Excluir</th>
+          </tr>
+        </thead>
+        <tbody>{this.renderExpensesTable()}</tbody>
+      </table>
     );
   }
 }
 
 const mapStateToProps = (state) => ({
-  expenses: state.wallet.expenses,
+  getWalletState: state.wallet.expenses,
+  storeCurrencies: state.wallet.currencies,
+  editIndex: state.wallet.editIndex,
+  editMode: state.wallet.editMode,
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  deleteExpense: (payload) => dispatch(deleteExpenseAction(payload)),
-  editExpense: (payload) => dispatch(editExpenseAction(payload)),
+  deleteExpenseAction: (id) => dispatch(deleteExpense(id)),
+  editExpenseAction: (id) => dispatch(editExpense(id)),
+  getCurrentExchangeAction: (coins) => dispatch(getCurrentExchange(coins)),
 });
 
-Table.propTypes = {
-  expenses: PropTypes.arrayOf(PropTypes.object).isRequired,
-  deleteExpense: PropTypes.func.isRequired,
-  editExpense: PropTypes.func.isRequired,
-};
-
 export default connect(mapStateToProps, mapDispatchToProps)(Table);
+
+Table.propTypes = {
+  deleteExpenseAction: PropTypes.func.isRequired,
+  getWalletState: PropTypes.arrayOf(
+    PropTypes.shape({
+      currency: PropTypes.string.isRequired,
+      description: PropTypes.string.isRequired,
+      exchangeRates: PropTypes.objectOf.isRequired,
+      id: PropTypes.number.isRequired,
+      method: PropTypes.string.isRequired,
+      value: PropTypes.string.isRequired,
+    }).isRequired,
+  ).isRequired,
+  editExpenseAction: PropTypes.func.isRequired,
+  getCurrentExchangeAction: PropTypes.func.isRequired,
+  editMode: PropTypes.bool.isRequired,
+};
